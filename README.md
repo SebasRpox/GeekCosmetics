@@ -10,13 +10,6 @@
   - [Client](#client)
 - [Deploy](#deploy)
 
-### Features
-
-- Fast contact and response with your assigned professional
-- Facility to chat about your ailments to your doctors
-- Safe and reliable information
-- A big list of diseases (20+)
-
 ### Technologies
 
 Made using the following technologies:
