@@ -3,14 +3,14 @@ import { withRouter } from "react-router-dom";
 import NavBar from "../components/navbar";
 import Footer from "../components/footer";
 
-const RealizarCompra = () =>{
+const totalCompras = () =>{
     return(
         <>
             <NavBar />
-            Aquí puedes realizar tu compra
+            Aquí puedes ver el total de tu compra
             <Footer />
         </>
     )
 }
 
-export default withRouter(RealizarCompra); 
+export default withRouter(totalCompras); 

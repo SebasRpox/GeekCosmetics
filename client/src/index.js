@@ -3,16 +3,24 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 
 //Import path
-import {_RealizarCompra} from "./config/path";
+import {
+  _Inicio,
+  _RealizarCompra,
+  _TotalCompras
+} from "./config/path";
 
 //Import pages
+import Inicio from "./pages/Inicio";
 import RealizarCompra from "./pages/realizarCompra";
+import TotalCompras from "./pages/totalCompras";
 
 const App = () => {
   return(
     <BrowserRouter>
       <Switch>
+        <Route exact path={_Inicio} component={Inicio} />
         <Route exact path={_RealizarCompra} component={RealizarCompra} />
+        <Route exact path={_TotalCompras} component={TotalCompras} />
       </Switch>
     </BrowserRouter>
   )
@@ -20,7 +28,7 @@ const App = () => {
 
 ReactDOM.render(
   <React.StrictMode>
-    <App path={_RealizarCompra} />
+    <App path={_Inicio} />
   </React.StrictMode>,
   document.getElementById('root')
 );

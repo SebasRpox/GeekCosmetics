@@ -3,19 +3,19 @@ const morgan = require('morgan');
 const cors = require('cors');
 const app = express();
 
-const compras = require('./routes/compras');
+const report = require('./routes/report');
 
-//Modo de uso de morgan "Middlewares"
+//Middlewares
 app.use(cors());
 app.use(express.json());
 require('dotenv').config();
 
 //Routes
-app.use('/', compras);
+app.use('/', report);
 
 app.set('port', 5001);
 
-// Levantamos el servidor
+//Server
 app.listen(app.get('port'), () => {
-    console.log(`Aplicación corriendo en el puerto ${app.get('port')}!!`);
+    console.log(`Running on port ${app.get('port')}!`);
 });
