@@ -1,36 +1,49 @@
 import React, { useEffect, useState } from "react";
 import { withRouter } from "react-router-dom";
-import DatePicker from "react-datepicker";
+//Components
 import NavBar from "../components/navbar";
 import Footer from "../components/footer";
+//DatePicker
 import "react-datepicker/dist/react-datepicker.css";
+import DatePicker from "react-datepicker";
+//Peticiones
 import axios from "axios";
+//LocalStorage
+import { getFromStorage, setInStorage } from "../utils/storage";
+//Image Space
+import SpaceImg from "../images/cosmetics-total.jpg";
+
+var subtotal;
 
 const RealizarCompra = () => {
 
     const [startDate, setStartDate] = useState(new Date());
+    const [fullArticulos, setFullArticulos] = useState([]);
     const [articulos, setArticulos] = useState([]);
     const [numOrden, setNumOrden] = useState([]);
     const [cantidad, setCantidad] = useState([]);
-    const [precio, setPrecio] = useState();
-    const [fullArticulos] = useState([]);
-    const [datos, setDatos] = useState({
-        nombre: ""
-    });
+    const [precio, setPrecio] = useState([]);
+    const [nombre, setNombre] = useState([]);
+    const [articulo, setArticulo] = useState([]);
 
-    const handleChange = (e) => {
-        setDatos({
-            ...datos,
-            [e.target.name] : e.target.value
-        })
-    }
-
+    //submit de pruebas
     const submitData = (e) => {
         e.preventDefault();
-        console.log("datos enviados!!")
+        console.log("¡¡Datos enviados!!")
+    }
+
+    var lista;
+    function obtenerReporte(){
+        lista = localStorage.getItem("localReport");
+        console.log("reporte obtener: "+lista);
+        setFullArticulos(lista);
     }
 
     useEffect(() => {
+        obtenerReporte();
+        console.log("full: ", fullArticulos)
+        console.log("articulos: ", articulos)
+        subtotal = cantidad * precio;
         axios
             .get("http://localhost:5001/articulos")
             .then((res) => {
@@ -40,7 +53,6 @@ const RealizarCompra = () => {
             .catch((err) => {
                 console.log(err)
             })
-
         axios
             .get("http://localhost:5001/numOrden")
             .then((res) => {
@@ -53,48 +65,73 @@ const RealizarCompra = () => {
     });
 
     const orden = numOrden.length + 1;
-    let subtotal = cantidad && precio > 0 ? cantidad * precio : 0;
-
-    const actualizarTodosLosProductos = () => {
+    function guardarReporte(){
+        let lista = {
+            orden: orden,
+            nombre: nombre,
+            articulo: articulo,
+            cantidad: cantidad,
+            precio: precio,
+            subtotal: subtotal
+        }
+        localStorage.setItem("localReport", JSON.stringify(lista));
+    }
+    const agregarReporte = () => {
         try {
-            fullArticulos.push({
-                id_Orden: orden,
-                nombre: datos.nombre,
-                fecha: startDate,
-                cantidad: cantidad,
-                //subtotal: subtotal,
-                //id_Producto: id_Producto
-            });
-            //setId_producto(0);
-            //setPrecio('');
-            //setNombre('');
+            
+            axios
+                .post("http://localhost:5001/addNumOrden")
+                .then((res) => {
+                    console.log(res)
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+            setStartDate(new Date());
+            setNombre([]);
+            setCantidad([]);
+            setArticulo([]);
+            subtotal = 0;
+            form.reset();
+            console.log("valores reseteados")
         } catch (error) {
             console.log(error)
         }
     }
+
+    const eliminarOrden = () => {
+        try {
+            console.log("Eliminado");
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    const form = document.getElementById("form");
 
     return (
         <>
             <NavBar />
             <div className="row">
                 <div className="col s6">
-                    <form onSubmit={submitData} className="col s12">
+                    <h4 className="center">Formulario de compra</h4>
+                    <form id="form" onSubmit={submitData} className="col s12">
                         <div className="row">
-                            <label for="disabled">Número de orden</label>
+                            <label htmlFor="disabled">Número de orden</label>
                             <div className="input-field col s12">
-                                <input disabled value="1" id="disabled" type="text" Name="validate" />
+                                <input disabled value={orden} id="disabled" type="text" Name="validate" />
                             </div>
                         </div>
                         <div className="row">
                             <div className="input-field col s12">
                                 <i class="material-icons prefix">account_circle</i>
-                                <input id="name" type="text" className="validate" name="nombre" onChange={handleChange} data-length="10" />
+                                <input id="name" type="text" className="validate" name="nombre" onChange={(e) => { setNombre(e.target.value) }} data-length="10" />
                                 <label htmlFor="name">Nombre</label>
                             </div>
                         </div>
                         <div className="row">
                             <label htmlFor="fecha">Fecha</label>
-                            <div class="input-field col s12">
+                            <div className="input-field col s12">
                                 <DatePicker selected={startDate}
                                     readOnly
                                     locale="es-CO"
@@ -107,11 +144,15 @@ const RealizarCompra = () => {
                         <div className="row">
                             <label htmlFor="articulo">Artículo</label>
                             <div className="input-field col s12">
-                                <select className="browser-default">
-                                    <option value="" disabled selected>Choose your option</option>
+                                <select onChange={(e) => {
+                                    const array = e.target.value.split(",");
+                                    setArticulo(array[0]);
+                                    setPrecio(array[1]);
+                                }} className="browser-default">
+                                    <option disabled selected>Choose your option</option>
                                     {articulos.map(articulo => {
                                         return (
-                                            <option key={articulo.id} value={articulo.id}>{articulo.descripcion}</option>
+                                            <option key={articulo.id} value={[articulo.descripcion, articulo.precio]}>{articulo.descripcion}</option>
                                         )
                                     })}
                                 </select>
@@ -119,38 +160,46 @@ const RealizarCompra = () => {
                         </div>
                         <div className="row">
                             <div className="input-field col s12">
-                                <input id="cantidad" type="number" className="validate" data-length="10" />
+                                <input id="cantidad" type="number" className="validate" onChange={(e) => { setCantidad(e.target.value) }} data-length="10" />
                                 <label htmlFor="cantidad">Cantidad</label>
                             </div>
                         </div>
                         <div className="row">
+                            <label htmlFor="subtotal">Subtotal</label>
                             <div className="input-field col s12">
-                                <input disabled id="subtotal" type="number" className="validate" data-length="10" />
-                                <label htmlFor="subtotal">Subtotal</label>
+                                <input disabled id="subtotal" type="number" className="validate" value={subtotal} data-length="10" />
                             </div>
                         </div>
                         <button
-                      className="btn waves-effect waves-light mx-auto d-block pink darken-4 hoverable"
-                      type="submit"
-                      name="submitData"
-                    >
-                      Enviar
+                            className="btn waves-effect waves-light mx-auto d-block pink darken-4 hoverable"
+                            type="submit"
+                            name="submitData"
+                            onClick={() => { guardarReporte() }}
+                        >
+                            Enviar
                       <i className="material-icons right">send</i>
-                    </button>
+                        </button>
                     </form>
                 </div>
-                
                 <div className="col s6">
-                    Detalles factura
-                    <br/>
-                    {fullArticulos.map((item) => {
-                                return (
-                                    <h5 width="10%">{item.nombre}</h5>                                 
-                                )
-                            })}
+                    <h4 className="center">Detalles de factura</h4>
+                    <table className="striped highlight responsive-table">
+                        <thead>
+                            <tr>
+                                <th>Artículo</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Borrar artículo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                           {fullArticulos.map(item=>{
+                               console.log(item)
+                           })}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
             <Footer />
         </>
     )
