@@ -1,10 +1,14 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { withRouter } from "react-router-dom";
+import axios from "axios";
 import NavBar from "../components/navbar";
 import Footer from "../components/footer";
 
-const totalCompras = () =>{
-    return(
+const TotalCompras = () => {
+
+    
+
+    return (
         <>
             <NavBar />
             Aquí puedes ver el total de tu compra
@@ -13,4 +17,4 @@ const totalCompras = () =>{
     )
 }
 
-export default withRouter(totalCompras); 
+export default withRouter(TotalCompras);

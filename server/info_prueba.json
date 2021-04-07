@@ -1,0 +1,69 @@
+{"articulos": [ 
+    {
+        "id": 1,
+        "descripcion": "Foam",
+        "precio": 25000,
+        "existencia": 523
+    },
+    {
+        "id": 2,
+        "descripcion": "Carbón Activado WIKI",
+        "precio": 18000,
+        "existencia": 300
+    },
+    {
+        "id": 3,
+        "descripcion": "DepilYA",
+        "precio": 10000,
+        "existencia": 1000
+    },
+    {
+        "id": 4,
+        "descripcion": "Mantequilla Corporal (durazno)",
+        "precio": 25000,
+        "existencia": 1000
+    },
+    {
+        "id": 5,
+        "descripcion": "Bronceador",
+        "precio": 40000,
+        "existencia": 250
+    },
+    {
+        "id": 6,
+        "descripcion": "Antiestrias",
+        "precio": 35000,
+        "existencia": 300
+    },
+    {
+        "id": 7,
+        "descripcion": "Despigmentante Intimo",
+        "precio": 40000,
+        "existencia": 500
+    },
+    {
+        "id": 8,
+        "descripcion": "Despigmentante Facial",
+        "precio": 35000,
+        "existencia": 365
+    },
+    {
+        "id": 9,
+        "descripcion": "Dermatónico",
+        "precio": 40000,
+        "existencia": 500
+    },
+    {
+        "id": 10,
+        "descripcion": "Mantequilla Corporal (frutos rojos)",
+        "precio": 25000,
+        "existencia": 2000
+    },
+    {
+        "id": 11,
+        "descripcion": "Mantequilla Corporal (naranja)",
+        "precio": 25000,
+        "existencia": 700
+    }
+]
+}
