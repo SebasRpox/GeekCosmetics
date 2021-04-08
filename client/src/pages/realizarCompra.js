@@ -9,40 +9,30 @@ import DatePicker from "react-datepicker";
 //Peticiones
 import axios from "axios";
 //LocalStorage
+/* Actualización: no uso localStorage porque manda error con 
+funciones (se intentó corregir con diversos cambios y no funcionó) */
 import { getFromStorage, setInStorage } from "../utils/storage";
-//Image Space
-import SpaceImg from "../images/cosmetics-total.jpg";
 
 var subtotal;
+var suma;
 
 const RealizarCompra = () => {
 
     const [startDate, setStartDate] = useState(new Date());
-    const [fullArticulos, setFullArticulos] = useState([]);
+    const [fullArticulos] = useState([]);
     const [articulos, setArticulos] = useState([]);
     const [numOrden, setNumOrden] = useState([]);
     const [cantidad, setCantidad] = useState([]);
     const [precio, setPrecio] = useState([]);
     const [nombre, setNombre] = useState([]);
     const [articulo, setArticulo] = useState([]);
-
-    //submit de pruebas
-    const submitData = (e) => {
-        e.preventDefault();
-        console.log("¡¡Datos enviados!!")
-    }
-
-    var lista;
-    function obtenerReporte(){
-        lista = localStorage.getItem("localReport");
-        console.log("reporte obtener: "+lista);
-        setFullArticulos(lista);
-    }
+    const [reporte, setReporte] = useState([]);
+    const [subtotals, setSubtotals] = useState([]);
+    const [iva, setIva] = useState([]);
+    const [total, setTotal] = useState([]);
 
     useEffect(() => {
-        obtenerReporte();
-        console.log("full: ", fullArticulos)
-        console.log("articulos: ", articulos)
+        sumaSubtotals();
         subtotal = cantidad * precio;
         axios
             .get("http://localhost:5001/articulos")
@@ -52,7 +42,7 @@ const RealizarCompra = () => {
             })
             .catch((err) => {
                 console.log(err)
-            })
+            });
         axios
             .get("http://localhost:5001/numOrden")
             .then((res) => {
@@ -62,23 +52,80 @@ const RealizarCompra = () => {
             .catch((err) => {
                 console.log(err)
             })
+        axios
+            .get("http://localhost:5001/obtenerOrden")
+            .then((res) => {
+                console.log(res);
+                setReporte(res.data);
+            })
+            .catch((err) => {
+                console.log(err)
+            });
+        axios
+            .get("http://localhost:5001/subtotal")
+            .then((res) => {
+                console.log(res);
+                setSubtotals(res.data)
+            })
+            .catch((err) => {
+                console.log(err)
+            })    
     });
+    const orden = (numOrden.length + 1)-1;
+    const sumaSubtotals = () => {
+        suma = subtotals.reduce(function(acc, el){
+            if(el.subtotal > 0){
+                return acc + el.subtotal;
+            }else{
+                return acc;
+            }
+        }, 0)
+        var calIVA = suma * 0.19;
+        setIva(calIVA);
+        setTotal(suma+calIVA);
+    } 
 
-    const orden = numOrden.length + 1;
-    function guardarReporte(){
-        let lista = {
-            orden: orden,
-            nombre: nombre,
-            articulo: articulo,
-            cantidad: cantidad,
-            precio: precio,
-            subtotal: subtotal
+    const finalizar = () => {
+        try {
+            axios.post(`http://localhost:5001/addReportTotal`,{
+                subtotal: suma,
+                iva: iva,
+                total: total
+            }).
+            then((res) => {
+                console.log(res)
+            }).catch((err) => {
+                console.log(err);
+            });
+        } catch (err) {
+            console.log(err)
         }
-        localStorage.setItem("localReport", JSON.stringify(lista));
     }
+
     const agregarReporte = () => {
         try {
-            
+            axios.post(`http://localhost:5001/addReport`,{
+                orden: orden,
+                nombre: nombre,
+                articulo: articulo,
+                cantidad: cantidad,
+                subtotal: subtotal
+            }).
+            then((res) => {
+                console.log(res)
+            }).catch((err) => {
+                console.log(err);
+            });
+            fullArticulos.push(
+                {
+                    orden: orden,
+                    nombre: nombre,
+                    articulo: articulo,
+                    cantidad: cantidad,
+                    precio: precio,
+                    subtotal: subtotal
+                }
+            )
             axios
                 .post("http://localhost:5001/addNumOrden")
                 .then((res) => {
@@ -93,15 +140,24 @@ const RealizarCompra = () => {
             setArticulo([]);
             subtotal = 0;
             form.reset();
-            console.log("valores reseteados")
-        } catch (error) {
-            console.log(error)
+            console.log("valores reseteados");
+        } catch (err) {
+            console.log(err);
         }
+        
     }
 
-    const eliminarOrden = () => {
+    const eliminarOrden = (numOrden) => {
+        console.log("numOrden: ", numOrden)
         try {
-            console.log("Eliminado");
+            axios
+            .delete(`http://localhost:5001/eliminarOrden/${numOrden}`)
+            .then((res) => {
+                console.log(res)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
         } catch (err) {
             console.log(err)
         }
@@ -115,7 +171,7 @@ const RealizarCompra = () => {
             <div className="row">
                 <div className="col s6">
                     <h4 className="center">Formulario de compra</h4>
-                    <form id="form" onSubmit={submitData} className="col s12">
+                    <form id="form" className="col s12">
                         <div className="row">
                             <label htmlFor="disabled">Número de orden</label>
                             <div className="input-field col s12">
@@ -174,7 +230,7 @@ const RealizarCompra = () => {
                             className="btn waves-effect waves-light mx-auto d-block pink darken-4 hoverable"
                             type="submit"
                             name="submitData"
-                            onClick={() => { guardarReporte() }}
+                            onClick={() => { agregarReporte() }}
                         >
                             Enviar
                       <i className="material-icons right">send</i>
@@ -193,11 +249,30 @@ const RealizarCompra = () => {
                             </tr>
                         </thead>
                         <tbody>
-                           {fullArticulos.map(item=>{
-                               console.log(item)
-                           })}
+                            {reporte.map(item => {
+                                return (
+                                    <tr>
+                                        <td>{item.articulo}</td>
+                                        <td>{item.cantidad}</td>
+                                        <td>{item.subtotal}</td>
+                                        <td><button onClick={() => {eliminarOrden(item.numOrden)}}>Eliminar</button></td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
+                    <h6>Subtotal: {suma}</h6>
+                    <h6>Total IVA: {iva}</h6>
+                    <h6>Total: {total}</h6>
+                    <button
+                            className="btn waves-effect waves-light mx-auto d-block pink darken-4 hoverable"
+                            type="submit"
+                            name="submitData"
+                            onClick={() => { finalizar() }}
+                        >
+                            Finalizar compra
+                      <i className="material-icons right">send</i>
+                        </button>
                 </div>
             </div>
             <Footer />
