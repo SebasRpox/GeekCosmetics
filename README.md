@@ -15,11 +15,12 @@
 Made using the following technologies:
 
 - [ReactJS] - For the frontend and the web page!
-- [Formik] - a small group of React components and hooks for building forms in React
 - [Bootstrap] - The most popular CSS framework
 - [Node.js] - evented I/O for the backend
 - [Express] - fast node.js network app framework
 - [MySQL] - Relational database
+- [Yup] - Error control
+- [Joi] - Validations backend
 - [Jest] - For unitaring testing on javascript (Not implement yet)
   - > And more...
 
@@ -32,7 +33,7 @@ Made using the following technologies:
 First of all clone the repository
 
 ```bash
-git clone https://github.com/SebasRpox/GeekCosmeticsView.git
+git clone https://github.com/SebasRpox/GeekCosmetics.git
 ```
 
 #### Server
@@ -45,7 +46,7 @@ Install all dependencies (NPM needed)
 npm install 
 ```
 Run the server on the port 
->*The default port is 5300/tcp , but if you have a .env file you can change it*
+>*The default port is 5001/tcp , but if you have a .env file you can change it*
 ```
 npm run dev
 ```
@@ -67,9 +68,10 @@ npm start
 <b align="center"> **Happy Coding!**</b>
 
 [bootstrap]: https://getbootstrap.com/
-[formik]: https://formik.org/
 [node.js]: http://nodejs.org
 [reactjs]: https://reactjs.org
 [express]: https://expressjs.com/
 [mysql]: https://www.mysql.com/
+[Yup]: https://www.npmjs.com/package/yup
+[Joi]: https://joi.dev/
 [jest]: https://jestjs.io/
