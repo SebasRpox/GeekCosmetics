@@ -12,6 +12,9 @@ import axios from "axios";
 /* Actualización: no uso localStorage porque manda error con 
 funciones (se intentó corregir con diversos cambios y no funcionó) */
 import { getFromStorage, setInStorage } from "../utils/storage";
+import * as $ from "jquery";
+import { Formik,Field, Form } from "formik";
+import * as Yup from "yup";
 
 var subtotal;
 var suma;
@@ -30,6 +33,7 @@ const RealizarCompra = () => {
     const [subtotals, setSubtotals] = useState([]);
     const [iva, setIva] = useState([]);
     const [total, setTotal] = useState([]);
+    const [existencia, setExistencia] = useState([]);
 
     useEffect(() => {
         sumaSubtotals();
@@ -37,7 +41,6 @@ const RealizarCompra = () => {
         axios
             .get("http://localhost:5001/articulos")
             .then((res) => {
-                console.log(res);
                 setArticulos(res.data);
             })
             .catch((err) => {
@@ -46,7 +49,6 @@ const RealizarCompra = () => {
         axios
             .get("http://localhost:5001/numOrden")
             .then((res) => {
-                console.log(res);
                 setNumOrden(res.data);
             })
             .catch((err) => {
@@ -55,7 +57,6 @@ const RealizarCompra = () => {
         axios
             .get("http://localhost:5001/obtenerOrden")
             .then((res) => {
-                console.log(res);
                 setReporte(res.data);
             })
             .catch((err) => {
@@ -64,58 +65,66 @@ const RealizarCompra = () => {
         axios
             .get("http://localhost:5001/subtotal")
             .then((res) => {
-                console.log(res);
                 setSubtotals(res.data)
             })
             .catch((err) => {
                 console.log(err)
-            })    
+            })
     });
-    const orden = (numOrden.length + 1)-1;
+
+    const validate = Yup.string().max(15, "Debe contener 15 caracteres o menos").required("Required")
+    .matches(/^[A-Za-z]+$/, "Only enter letters");
+
+    const orden = (numOrden.length + 1) - 1;
     const sumaSubtotals = () => {
-        suma = subtotals.reduce(function(acc, el){
-            if(el.subtotal > 0){
+        suma = subtotals.reduce(function (acc, el) {
+            if (el.subtotal > 0) {
                 return acc + el.subtotal;
-            }else{
+            } else {
                 return acc;
             }
         }, 0)
         var calIVA = suma * 0.19;
         setIva(calIVA);
-        setTotal(suma+calIVA);
-    } 
+        setTotal(suma + calIVA);
+    }
 
     const finalizar = () => {
         try {
-            axios.post(`http://localhost:5001/addReportTotal`,{
+            axios.post(`http://localhost:5001/addReportTotal`, {
                 subtotal: suma,
                 iva: iva,
                 total: total
             }).
-            then((res) => {
-                console.log(res)
-            }).catch((err) => {
-                console.log(err);
-            });
+                then((res) => {
+                    console.log(res);
+                }).catch((err) => {
+                    console.log(err);
+                });
         } catch (err) {
-            console.log(err)
+            console.log(err);
         }
     }
 
-    const agregarReporte = () => {
+    const comprobarExistencia = () => {
+        cantidad > existencia ? cantidad = existencia : cantidad = existencia;
+        $("#option").attr("readOnly", "readOnly");
+    }
+
+    const agregarReporte = (values) => {
         try {
-            axios.post(`http://localhost:5001/addReport`,{
+            axios.post(`http://localhost:5001/addReport`, {
                 orden: orden,
-                nombre: nombre,
+                nombre: values.name,
                 articulo: articulo,
                 cantidad: cantidad,
                 subtotal: subtotal
             }).
-            then((res) => {
-                console.log(res)
-            }).catch((err) => {
-                console.log(err);
-            });
+                then((res) => {
+                    console.log(res)
+                }).catch((err) => {
+                    console.log(err);
+                });
             fullArticulos.push(
                 {
                     orden: orden,
@@ -140,24 +149,21 @@ const RealizarCompra = () => {
             setArticulo([]);
             subtotal = 0;
             form.reset();
-            console.log("valores reseteados");
         } catch (err) {
             console.log(err);
         }
-        
     }
 
     const eliminarOrden = (numOrden) => {
-        console.log("numOrden: ", numOrden)
         try {
             axios
-            .delete(`http://localhost:5001/eliminarOrden/${numOrden}`)
-            .then((res) => {
-                console.log(res)
-            })
-            .catch((err) => {
-                console.log(err)
-            })
+                .delete(`http://localhost:5001/eliminarOrden/${numOrden}`)
+                .then((res) => {
+                    console.log(res)
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
         } catch (err) {
             console.log(err)
         }
@@ -168,6 +174,26 @@ const RealizarCompra = () => {
     return (
         <>
             <NavBar />
+            <Formik
+                initialValues={{
+                  name: "",
+                }}
+                validationSchema={validate}
+                onSubmit={(values) => {
+                  agregarReporte(values);
+                }}
+              >
+                <Form>
+                  <Field
+                    type="text"
+                    name="name"
+                    id="name"
+                    required
+                  />
+                  <button type="submit">Submit</button>
+                </Form>
+              </Formik>
+
             <div className="row">
                 <div className="col s6">
                     <h4 className="center">Formulario de compra</h4>
@@ -181,7 +207,7 @@ const RealizarCompra = () => {
                         <div className="row">
                             <div className="input-field col s12">
                                 <i class="material-icons prefix">account_circle</i>
-                                <input id="name" type="text" className="validate" name="nombre" onChange={(e) => { setNombre(e.target.value) }} data-length="10" />
+                                <input id="name" type="text" className="validate" name="name" onChange={(e) => { setNombre(e.target.value) }} data-length="15" />
                                 <label htmlFor="name">Nombre</label>
                             </div>
                         </div>
@@ -190,7 +216,6 @@ const RealizarCompra = () => {
                             <div className="input-field col s12">
                                 <DatePicker selected={startDate}
                                     readOnly
-                                    locale="es-CO"
                                     showTimeSelect
                                     timeFormat="p"
                                     timeIntervals={15}
@@ -204,11 +229,12 @@ const RealizarCompra = () => {
                                     const array = e.target.value.split(",");
                                     setArticulo(array[0]);
                                     setPrecio(array[1]);
+                                    setExistencia(array[2]);
                                 }} className="browser-default">
                                     <option disabled selected>Choose your option</option>
                                     {articulos.map(articulo => {
                                         return (
-                                            <option key={articulo.id} value={[articulo.descripcion, articulo.precio]}>{articulo.descripcion}</option>
+                                            <option key={articulo.id} value={[articulo.descripcion, articulo.precio, articulo.existencia]}>{articulo.descripcion}</option>
                                         )
                                     })}
                                 </select>
@@ -255,7 +281,7 @@ const RealizarCompra = () => {
                                         <td>{item.articulo}</td>
                                         <td>{item.cantidad}</td>
                                         <td>{item.subtotal}</td>
-                                        <td><button onClick={() => {eliminarOrden(item.numOrden)}}>Eliminar</button></td>
+                                        <td><button onClick={() => { eliminarOrden(item.numOrden) }}>Eliminar</button></td>
                                     </tr>
                                 )
                             })}
@@ -265,19 +291,18 @@ const RealizarCompra = () => {
                     <h6>Total IVA: {iva}</h6>
                     <h6>Total: {total}</h6>
                     <button
-                            className="btn waves-effect waves-light mx-auto d-block pink darken-4 hoverable"
-                            type="submit"
-                            name="submitData"
-                            onClick={() => { finalizar() }}
-                        >
-                            Finalizar compra
+                        className="btn waves-effect waves-light mx-auto d-block pink darken-4 hoverable"
+                        type="submit"
+                        name="submitData"
+                        onClick={() => { finalizar() }}
+                    >
+                        Finalizar compra
                       <i className="material-icons right">send</i>
-                        </button>
+                    </button>
                 </div>
             </div>
             <Footer />
         </>
     )
 }
-
 export default withRouter(RealizarCompra);
