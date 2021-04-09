@@ -12,15 +12,19 @@ import axios from "axios";
 /* Actualización: no uso localStorage porque manda error con 
 funciones (se intentó corregir con diversos cambios y no funcionó) */
 import { getFromStorage, setInStorage } from "../utils/storage";
+//comprobacion (restricciones)
 import * as $ from "jquery";
+//validacion
 import { Formik,Field, Form } from "formik";
 import * as Yup from "yup";
 
+// variables globales
 var subtotal;
 var suma;
 
 const RealizarCompra = () => {
 
+    //estados
     const [startDate, setStartDate] = useState(new Date());
     const [fullArticulos] = useState([]);
     const [articulos, setArticulos] = useState([]);
@@ -35,6 +39,7 @@ const RealizarCompra = () => {
     const [total, setTotal] = useState([]);
     const [existencia, setExistencia] = useState([]);
 
+    //Renderizar
     useEffect(() => {
         sumaSubtotals();
         subtotal = cantidad * precio;
@@ -72,10 +77,14 @@ const RealizarCompra = () => {
             })
     });
 
+    //validacion yup para formik
     const validate = Yup.string().max(15, "Debe contener 15 caracteres o menos").required("Required")
     .matches(/^[A-Za-z]+$/, "Only enter letters");
 
+    //numero de orden
     const orden = (numOrden.length + 1) - 1;
+
+    //sumar subtotales
     const sumaSubtotals = () => {
         suma = subtotals.reduce(function (acc, el) {
             if (el.subtotal > 0) {
@@ -89,6 +98,7 @@ const RealizarCompra = () => {
         setTotal(suma + calIVA);
     }
 
+    //finalizar compra
     const finalizar = () => {
         try {
             axios.post(`http://localhost:5001/addReportTotal`, {
@@ -111,6 +121,10 @@ const RealizarCompra = () => {
         $("#option").attr("readOnly", "readOnly");
     }
 
+    //reset form
+    const form = document.getElementById("form");
+
+    //agregar nuevo reporte a detalles
     const agregarReporte = (values) => {
         try {
             axios.post(`http://localhost:5001/addReport`, {
@@ -154,6 +168,7 @@ const RealizarCompra = () => {
         }
     }
 
+    //eliminar orden
     const eliminarOrden = (numOrden) => {
         try {
             axios
@@ -169,31 +184,9 @@ const RealizarCompra = () => {
         }
     }
 
-    const form = document.getElementById("form");
-
     return (
         <>
             <NavBar />
-            <Formik
-                initialValues={{
-                  name: "",
-                }}
-                validationSchema={validate}
-                onSubmit={(values) => {
-                  agregarReporte(values);
-                }}
-              >
-                <Form>
-                  <Field
-                    type="text"
-                    name="name"
-                    id="name"
-                    required
-                  />
-                  <button type="submit">Submit</button>
-                </Form>
-              </Formik>
-
             <div className="row">
                 <div className="col s6">
                     <h4 className="center">Formulario de compra</h4>

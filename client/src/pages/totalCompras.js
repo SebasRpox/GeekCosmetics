@@ -1,14 +1,18 @@
 import React, {useState, useEffect} from "react";
 import { withRouter } from "react-router-dom";
+//Peticiones
 import axios from "axios";
+//Componentes
 import NavBar from "../components/navbar";
 import Footer from "../components/footer";
 
 const TotalCompras = () => {
 
+    //estados
     const [reporte, setReporte] = useState([]);
     const [total, setTotal] = useState([]);
 
+    //renderizar
     useEffect(()=>{
         axios
             .get("http://localhost:5001/obtenerOrden")
