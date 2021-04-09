@@ -1,9 +1,10 @@
 const express = require('express');
-const morgan = require('morgan');
 const cors = require('cors');
 const app = express();
-
+//Routes
 const report = require('./routes/report');
+//Erros middlewares
+const handleErrors = require("./errors/handleErrors");
 
 //Middlewares
 app.use(cors());
@@ -13,6 +14,10 @@ require('dotenv').config();
 //Routes
 app.use('/', report);
 
+//Errors
+app.use(handleErrors);
+
+//Assign port
 app.set('port', 5001);
 
 //Server

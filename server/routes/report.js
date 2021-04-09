@@ -1,12 +1,14 @@
 const { Router } = require('express');
 const { cnn_mysql } = require('../database/db');
 const router = Router();
+const { validation_addReport, validation_addReportTotal, validation_numOrden } = require("../validations/validations");
 
 //obtener datos de los articulos
 router.get('/articulos', (req, res) => {
     cnn_mysql.query('SELECT * FROM articulos', (err, resultSet) => {
         if (err) {
-            return res.status(500).send("Database error");
+            console.log(err);
+            next(err);
         } else {
             return res.json(resultSet);
         }
@@ -14,10 +16,11 @@ router.get('/articulos', (req, res) => {
 });
 
 //obtener numero de orden
-router.get('/numOrden', (req, res) => {
+router.get('/numOrden', (req, res, next) => {
     cnn_mysql.query('SELECT * FROM numOrden', (err, resultSet) => {
         if (err) {
-            return res.status(500).send("Database error");
+            console.log(err);
+            next(err);
         } else {
             return res.json(resultSet);
         }
@@ -28,7 +31,8 @@ router.get('/numOrden', (req, res) => {
 router.get('/obtenerOrden', (req, res) => {
     cnn_mysql.query('SELECT * FROM orden', (err, resultSet) => {
         if (err) {
-            return res.status(500).send("Database error");
+            console.log(err);
+            next(err);
         } else {
             return res.json(resultSet);
         }
@@ -39,7 +43,8 @@ router.get('/obtenerOrden', (req, res) => {
 router.get('/subtotal', (req, res) => {
     cnn_mysql.query('SELECT subtotal FROM orden', (err, resultSet) => {
         if (err) {
-            return res.status(500).send("Database error");
+            console.log(err);
+            next(err);
         } else {
             return res.json(resultSet);
         }
@@ -50,7 +55,8 @@ router.get('/subtotal', (req, res) => {
 router.get('/total', (req, res) => {
     cnn_mysql.query('SELECT * FROM ordenTotal', (err, resultSet) => {
         if (err) {
-            return res.status(500).send("Database error");
+            console.log(err);
+            next(err);
         } else {
             return res.json(resultSet);
         }
@@ -61,7 +67,8 @@ router.get('/total', (req, res) => {
 router.post("/addNumOrden", (req, res) => {
     cnn_mysql.query("INSERT INTO `numOrden`(`orden`) VALUES (0)", (err, resultSet) => {
         if (err) {
-            return res.status(500).send("Database error");
+            console.log(err);
+            next(err);
         }
         else {
             return res.json(resultSet);
@@ -73,6 +80,7 @@ router.post("/addNumOrden", (req, res) => {
 router.post("/addReport", async (req, res) => {
     const { orden, nombre, articulo, cantidad, subtotal } = req.body;
     const [rows, fields] = await cnn_mysql.promise().execute(`INSERT INTO orden(numOrden, nombre, fecha, articulo, cantidad, subtotal) VALUES (?,?,CURRENT_TIMESTAMP,?,?,?)`, [orden,nombre,articulo,cantidad,subtotal]);
+    const validate = await validation_addReport.validateAsync(req.body);
 
     if (rows.affectedRows > 0) {
         res.json({
@@ -88,6 +96,7 @@ router.post("/addReport", async (req, res) => {
 router.post("/addReportTotal", async (req, res) => {
     const {subtotal, iva, total } = req.body;
     const [rows, fields] = await cnn_mysql.promise().execute(`INSERT INTO ordenTotal(subtotal, iva, total) VALUES (?,?,?)`, [subtotal,iva,total]);
+    const validate = await validation_addReportTotal.validateAsync(req.body);
 
     if (rows.affectedRows > 0) {
         res.json({
@@ -100,11 +109,14 @@ router.post("/addReportTotal", async (req, res) => {
 });
 
 //eliminar una orden
-router.delete(`/eliminarOrden/:numOrden`, (req, res)=>{
+router.delete(`/eliminarOrden/:numOrden`, async (req, res)=>{
     const {numOrden} = req.params;
+    const validate = await validation_numOrden.validateAsync(req.body);
+
     cnn_mysql.query("DELETE FROM orden WHERE `numOrden` = ?", numOrden, (err, result)=>{
         if(err){
             console.log(err);
+            next(err);
         }else{
             res.send(result);
         }

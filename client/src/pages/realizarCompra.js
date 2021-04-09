@@ -41,6 +41,7 @@ const RealizarCompra = () => {
 
     //Renderizar
     useEffect(() => {
+        console.clear();
         sumaSubtotals();
         subtotal = cantidad * precio;
         axios
@@ -129,7 +130,7 @@ const RealizarCompra = () => {
         try {
             axios.post(`http://localhost:5001/addReport`, {
                 orden: orden,
-                nombre: values.name,
+                nombre: nombre,
                 articulo: articulo,
                 cantidad: cantidad,
                 subtotal: subtotal

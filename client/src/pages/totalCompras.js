@@ -14,6 +14,7 @@ const TotalCompras = () => {
 
     //renderizar
     useEffect(()=>{
+        console.clear();
         axios
             .get("http://localhost:5001/obtenerOrden")
             .then((res) => {
@@ -63,7 +64,7 @@ const TotalCompras = () => {
                             <div className="center">
                             <h6> <strong> Subtotal: </strong>{item.subtotal}</h6>
                             <h6> <strong>Total IVA: </strong>{item.iva}</h6>
-                            <h6> <strong>Subtotal: </strong>{item.total}</h6>
+                            <h6> <strong>Total: </strong>{item.total}</h6>
                             </div>
                         )
                     })}
